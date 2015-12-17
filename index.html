@@ -1,0 +1,131 @@
+<html>
+	<head>
+		<link href="style.css" rel="stylesheet" type="text/css" />
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>test</title>
+		<script id="vs" type="x-shader/x-vertex">
+			attribute vec3 hoge;
+			attribute vec3 position;
+			attribute vec3 normal1;
+			attribute vec4 color;
+			attribute vec2 textureCoord;
+			attribute vec2 textureCoordSphere;
+
+			attribute float edgeScale;
+			uniform   mat4 mvpMatrix;
+			uniform   bool edge;
+			uniform   float edgeSize;
+			uniform		bool sphereMap;
+			uniform		mat4 mvMatrix;
+			uniform		vec3 viewVec;
+			uniform		vec4 specularColor;
+			varying   vec3 vNormal;
+			varying   vec4 vColor;
+			varying   vec2 vTextureCoord;
+			varying   vec2 vTextureCoordSphere;
+
+			void main(void){
+				vec3 pos    = position;
+				if(edge){
+					vec4 diffvec = mvpMatrix * vec4(pos, 1.0);
+					vec4 diffvec2 = mvpMatrix * vec4(pos + normal1, 1.0) - diffvec;
+					float pixelScale = 1.0 / sqrt(dot(diffvec2.xyz, diffvec2.xyz));
+					pos    += normal1 * edgeSize * edgeScale * pixelScale * 0.01;
+				}
+				vColor = color;
+				if(sphereMap){
+					// sphere mapping texture coord
+					vTextureCoordSphere = (mvMatrix * vec4(normal1, 1.0)).xy;
+					vTextureCoordSphere = vTextureCoordSphere / sqrt(dot(vTextureCoordSphere, vTextureCoordSphere));
+					vec3 newView = viewVec / sqrt(dot(viewVec, viewVec));
+					vec3 fVec = newView - 2.0 * normal1 * dot(newView, normal1);
+					//fVec = fVec / sqrt(dot(fVec, fVec));
+					vTextureCoordSphere = (fVec * 0.5 + 0.5).xy;
+					vTextureCoord = vec2(0.3, 0.8);
+					//vColor        = vec4(0.2, 0.9, 0.9, 0.6);
+					vTextureCoord = textureCoord;
+					vTextureCoord.x = textureCoordSphere.x;
+					//vColor = specularColor;
+				}else{
+					// normal texture mapping (from uv)
+					vTextureCoord = textureCoord;
+				}
+				vNormal     = normal1;
+				gl_Position = mvpMatrix * vec4(pos, 1.0);
+			}
+		</script>
+
+		<script id="fs" type="x-shader/x-fragment">
+			precision mediump float;
+
+			uniform mat4      invMatrix;
+			uniform vec3      lightDirection;
+			uniform sampler2D texture;
+			uniform sampler2D textureSphere;
+			uniform bool useTexture;
+			uniform vec4 edgeColor;
+			uniform   bool edge;
+			uniform		bool sphereMap;
+			uniform int envMode;
+
+			varying vec3 vNormal;
+			varying vec4 vColor;
+			varying vec2 vTextureCoord;
+			varying vec2 vTextureCoordSphere;
+
+			void main(void){
+				if(edge){
+					gl_FragColor   = edgeColor;
+				}else{
+					vec4 smpColor = vec4(1.0);
+					if(sphereMap){
+						smpColor = texture2D(texture, vTextureCoord);
+						smpColor = vec4(1.0, 1.0, 1.0,1.0);
+						vec4 smpColorSphere = texture2D(textureSphere, vTextureCoordSphere);
+						if(envMode == 1){
+							// multiply
+							smpColorSphere.a = 0.1;
+							gl_FragColor  = vColor * (smpColor * (1.0 - smpColorSphere.a) + smpColorSphere * smpColorSphere.a);
+						}else if(envMode == 2){
+							// additive
+							smpColorSphere.a = 0.00;
+							gl_FragColor  = vColor * (smpColor * (1.0 - smpColorSphere.a) + smpColorSphere);
+						}
+						return;
+					}else
+					if(useTexture){
+						smpColor = texture2D(texture, vTextureCoord);
+						smpColor = vec4(1.0, 1.0, 1.0,1.0);
+						gl_FragColor  = vColor * smpColor;
+					}else{
+						smpColor = vec4(1.0, 1.0, 1.0,1.0);
+						gl_FragColor  = vColor * smpColor;
+					}
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div id="container">
+			<canvas id="canvas"></canvas>
+			<canvas class="over" id="text"></canvas>
+			<div class="over" id="buttons">
+				<button id="bt_x0p">x0+</button><button id="bt_x0m">x0-</button>
+				<button id="bt_y0p">y0+</button><button id="bt_y0m">y0-</button>
+				<button id="bt_z0p">z0+</button><button id="bt_z0m">z0-</button>
+				<button id="bt_x1p">x1+</button><button id="bt_x1m">x1-</button>
+				<button id="bt_y1p">y1+</button><button id="bt_y1m">y1-</button>
+				<button id="bt_z1p">z1+</button><button id="bt_z1m">z1-</button>
+				<button id="bt_p1p">p1+</button><button id="bt_p1m">p1-</button>
+				<input type=checkbox checked id="dodraw0"><label for=dodraw0>d0</label>
+				<input type=checkbox checked id="dodraw1"><label for=dodraw1>d1</label>
+				<input type=checkbox checked id="dodraw2"><label for=dodraw2>d2</label>
+				<input type=checkbox checked id="dodraw3"><label for=dodraw3>d3</label>
+			</div>
+			<div class="over" id="col"></div>
+			<div class="over" id="checks"></div>
+		</div>
+		<script language="javascript" src="minMatrix.js"></script>
+		<script language="javascript" src="main.js"></script>
+	</body>
+</html>
