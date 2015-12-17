@@ -2,14 +2,12 @@
 	<head>
 		<link href="style.css" rel="stylesheet" type="text/css" />
 		<meta name="viewport" content="width=device-width,initial-scale=1">
-		<title>test</title>
+		<title>Loading...</title>
 		<script id="vs" type="x-shader/x-vertex">
-			attribute vec3 hoge;
 			attribute vec3 position;
-			attribute vec3 normal1;
+			attribute vec3 normal;
 			attribute vec4 color;
 			attribute vec2 textureCoord;
-			attribute vec2 textureCoordSphere;
 
 			attribute float edgeScale;
 			uniform   mat4 mvpMatrix;
@@ -28,29 +26,28 @@
 				vec3 pos    = position;
 				if(edge){
 					vec4 diffvec = mvpMatrix * vec4(pos, 1.0);
-					vec4 diffvec2 = mvpMatrix * vec4(pos + normal1, 1.0) - diffvec;
+					vec4 diffvec2 = mvpMatrix * vec4(pos + normal, 1.0) - diffvec;
 					float pixelScale = 1.0 / sqrt(dot(diffvec2.xyz, diffvec2.xyz));
-					pos    += normal1 * edgeSize * edgeScale * pixelScale * 0.01;
+					pos    += normal * edgeSize * edgeScale * pixelScale * 0.01;
 				}
 				vColor = color;
 				if(sphereMap){
 					// sphere mapping texture coord
-					vTextureCoordSphere = (mvMatrix * vec4(normal1, 1.0)).xy;
+					vTextureCoordSphere = (mvMatrix * vec4(normal, 1.0)).xy;
 					vTextureCoordSphere = vTextureCoordSphere / sqrt(dot(vTextureCoordSphere, vTextureCoordSphere));
 					vec3 newView = viewVec / sqrt(dot(viewVec, viewVec));
-					vec3 fVec = newView - 2.0 * normal1 * dot(newView, normal1);
+					vec3 fVec = newView - 2.0 * normal * dot(newView, normal);
 					//fVec = fVec / sqrt(dot(fVec, fVec));
 					vTextureCoordSphere = (fVec * 0.5 + 0.5).xy;
 					vTextureCoord = vec2(0.3, 0.8);
 					//vColor        = vec4(0.2, 0.9, 0.9, 0.6);
 					vTextureCoord = textureCoord;
-					vTextureCoord.x = textureCoordSphere.x;
 					//vColor = specularColor;
 				}else{
 					// normal texture mapping (from uv)
 					vTextureCoord = textureCoord;
 				}
-				vNormal     = normal1;
+				vNormal     = normal;
 				gl_Position = mvpMatrix * vec4(pos, 1.0);
 			}
 		</script>
@@ -80,7 +77,6 @@
 					vec4 smpColor = vec4(1.0);
 					if(sphereMap){
 						smpColor = texture2D(texture, vTextureCoord);
-						smpColor = vec4(1.0, 1.0, 1.0,1.0);
 						vec4 smpColorSphere = texture2D(textureSphere, vTextureCoordSphere);
 						if(envMode == 1){
 							// multiply
@@ -95,10 +91,8 @@
 					}else
 					if(useTexture){
 						smpColor = texture2D(texture, vTextureCoord);
-						smpColor = vec4(1.0, 1.0, 1.0,1.0);
 						gl_FragColor  = vColor * smpColor;
 					}else{
-						smpColor = vec4(1.0, 1.0, 1.0,1.0);
 						gl_FragColor  = vColor * smpColor;
 					}
 				}

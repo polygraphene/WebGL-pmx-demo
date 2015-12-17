@@ -1,5 +1,6 @@
 window.onload = function(){
     var m = new matIV();
+    var model_name;
     var gl, c;
     var vertexes = null;
     var vertex_normals = null;
@@ -56,6 +57,8 @@ window.onload = function(){
         var model_name_eng = mybuf.readstr();
         var comment_local = mybuf.readstr();
         var comment_eng = mybuf.readstr();
+
+        model_name = model_name_local;
 
         // vertex data
         console.log("start of vertex data: " + mybuf.pos.toString(16));
@@ -149,7 +152,6 @@ window.onload = function(){
         textures = Array(tex_count);
         gltexs = Array(tex_count);
         for(var i = 0; i < tex_count; i++){
-            draws[i] = 1;
             textures[i] = mybuf.readstr();
             textures[i] = textures[i].replace(/\\/g, '/');
             textures[i] = textures[i].replace(/\.tga/, '.png');
@@ -187,6 +189,7 @@ window.onload = function(){
         var mat_count = mybuf.read32();
         console.log("mat count: " + mat_count);
         for(var i = 0; i < mat_count; i++){
+            draws[i] = 1;
             var name = mybuf.readstr();
             var engname = mybuf.readstr();
             console.log("mat " + i + " " + name + " " + engname + " pos:" + mybuf.pos.toString(16));
@@ -779,7 +782,7 @@ window.onload = function(){
 
     var attLocation = new Array();
     var attStride = new Array();
-    var attVariables = ['position', 'color', 'textureCoord', 'textureCoorSphere', 'normal1', 'edgeScale', 'hoge'];
+    var attVariables = ['position', 'color', 'textureCoord', 'textureCoorSphere', 'normal', 'edgeScale', 'hoge'];
     var attVariableStrides = [3, 4, 2, 2, 3, 1, 2];
     for(var i in attVariables){
         attLocation[attVariables[i]] = gl.getAttribLocation(prg, attVariables[i]);
@@ -856,6 +859,7 @@ window.onload = function(){
     var vbo_vertexes;
     var vbo_texture;
     load(function(){
+        document.title = model_name;
         var a_colors = Array(4 * vertexes.length / 3);
         for(var i = 0; i < a_colors.length; i+=12){
             for(var j = 0; j < 12; j+=1){
