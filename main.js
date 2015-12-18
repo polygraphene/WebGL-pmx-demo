@@ -423,14 +423,11 @@ window.onload = function(){
 
     function load(callback) {
         var xhr = new XMLHttpRequest();
-        basedir = './data/test1/';
-        if(window.location.search.search('t') != -1){
-            basedir = './data/test2/a/';
+        if(window.location.search == ""){
+            window.location.href = "./t.html";
+            return;
         }
-        var file = basedir + '/a.pmx';
-        if(window.location.search.search('b') != -1){
-            file = basedir + '/b.pmx';
-        }
+
         file = window.location.search.replace(/^\?/, "");
         basedir = file.replace(/\/[^\/]*$/, "");
         basedir += "/";
@@ -782,8 +779,8 @@ window.onload = function(){
 
     var attLocation = new Array();
     var attStride = new Array();
-    var attVariables = ['position', 'color', 'textureCoord', 'textureCoorSphere', 'normal', 'edgeScale', 'hoge'];
-    var attVariableStrides = [3, 4, 2, 2, 3, 1, 2];
+    var attVariables = ['position', 'color', 'textureCoord', 'normal', 'edgeScale'];
+    var attVariableStrides = [3, 4, 2, 3, 1];
     for(var i in attVariables){
         attLocation[attVariables[i]] = gl.getAttribLocation(prg, attVariables[i]);
         attStride[attVariables[i]] = attVariableStrides[i];
